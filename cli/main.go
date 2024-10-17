@@ -22,8 +22,7 @@ func listDir(folder string) {
 			// Recursively read the files in subdirectories
 			listDir(filepath.Join(folder, e.Name()))
 		} else {
-
-			fmt.Println(e.Name())
+			fmt.Println(filepath.Join(folder, e.Name()))
 		}
 	}
 }
