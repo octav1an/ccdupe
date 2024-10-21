@@ -13,7 +13,6 @@ func main() {
 	listDir("./test")
 }
 
-var sizes = make(map[int64]string)
 var hashes = make(map[[16]byte]string)
 
 func listDir(folder string) {
