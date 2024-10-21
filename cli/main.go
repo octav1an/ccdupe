@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +14,7 @@ func main() {
 }
 
 var sizes = make(map[int64]string)
+var hashes = make(map[[16]byte]string)
 
 func listDir(folder string) {
 	entries, err := os.ReadDir(folder)
@@ -24,23 +27,28 @@ func listDir(folder string) {
 			// Recursively read the files in subdirectories
 			listDir(filepath.Join(folder, e.Name()))
 		} else {
-			// fmt.Println(filepath.Join(folder, e.Name()))
 			var path = filepath.Join(folder, e.Name())
-			fi, err := os.Stat(path)
-			if err != nil {
-				log.Fatal(err)
-			}
 
-			compareBySize(path, fi)
+			data, err := os.ReadFile(path)
+			if err != nil {
+				fmt.Println("Error reading file:", err)
+				return
+			}
+			compareByHash(path, data)
 		}
 	}
+
+	fmt.Println(hashes)
 }
 
-func compareBySize(file_path string, fi os.FileInfo) {
-	original_path, ok := sizes[fi.Size()]
-	if ok {
-		fmt.Printf("Potential duplicates: %s %s \n", file_path, original_path)
+func compareByHash(path string, data []byte) {
+	var hash = md5.Sum(data)
+
+	existing_path, exists := hashes[hash]
+	if !exists {
+		hashes[hash] = path
+		fmt.Printf("No file with this hash %s and path %s exists\n", hex.EncodeToString(hash[:]), path)
 	} else {
-		sizes[fi.Size()] = file_path
+		fmt.Printf("Duplicate for %s is in %s\n", path, existing_path)
 	}
 }
