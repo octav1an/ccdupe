@@ -48,7 +48,7 @@ func (fp *FileProcessor) compareByHash(path string, data []byte) {
 
 	existing_path, exists := fp.hashes[hash]
 	if exists {
-		fmt.Printf("Duplicate for %s is in %s\n", path, existing_path)
+		fmt.Printf("duplicate for %s is in %s\n", path, existing_path)
 	} else {
 		fp.hashes[hash] = path
 	}
@@ -57,6 +57,6 @@ func (fp *FileProcessor) compareByHash(path string, data []byte) {
 func main() {
 	fileProcessor := newFileProcessor()
 	if err := fileProcessor.ProcessDirectory("./test"); err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("error:", err)
 	}
 }
