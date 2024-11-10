@@ -1,46 +1,62 @@
 package main
 
 import (
+	"crypto/md5"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 )
 
-func main() {
-	listDir("./test")
+type FileProcessor struct {
+	hashes map[[16]byte]string
 }
 
-var sizes = make(map[int64]string)
+func newFileProcessor() *FileProcessor {
+	return &FileProcessor{hashes: make(map[[16]byte]string)}
+}
 
-func listDir(folder string) {
+func (fp *FileProcessor) ProcessDirectory(folder string) error {
+	return fp.listDir(folder)
+}
+
+func (fp *FileProcessor) listDir(folder string) error {
 	entries, err := os.ReadDir(folder)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error reading directory %s: %w", folder, err)
 	}
 
 	for _, e := range entries {
+		path := filepath.Join(folder, e.Name())
 		if e.IsDir() {
 			// Recursively read the files in subdirectories
-			listDir(filepath.Join(folder, e.Name()))
-		} else {
-			// fmt.Println(filepath.Join(folder, e.Name()))
-			var path = filepath.Join(folder, e.Name())
-			fi, err := os.Stat(path)
-			if err != nil {
-				log.Fatal(err)
+			if err := fp.listDir(path); err != nil {
+				return err
 			}
-
-			compareBySize(path, fi)
+		} else {
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return fmt.Errorf("error reading file %s: %w", path, err)
+			}
+			fp.compareByHash(path, data)
 		}
+	}
+	return nil
+}
+
+func (fp *FileProcessor) compareByHash(path string, data []byte) {
+	hash := md5.Sum(data)
+
+	existing_path, exists := fp.hashes[hash]
+	if exists {
+		fmt.Printf("duplicate for %s is in %s\n", path, existing_path)
+	} else {
+		fp.hashes[hash] = path
 	}
 }
 
-func compareBySize(file_path string, fi os.FileInfo) {
-	original_path, ok := sizes[fi.Size()]
-	if ok {
-		fmt.Printf("Potential duplicates: %s %s \n", file_path, original_path)
-	} else {
-		sizes[fi.Size()] = file_path
+func main() {
+	fileProcessor := newFileProcessor()
+	if err := fileProcessor.ProcessDirectory("./test"); err != nil {
+		fmt.Println("error:", err)
 	}
 }
