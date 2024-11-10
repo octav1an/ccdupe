@@ -2,52 +2,61 @@ package main
 
 import (
 	"crypto/md5"
-	"encoding/hex"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 )
 
-func main() {
-	listDir("./test")
+type FileProcessor struct {
+	hashes map[[16]byte]string
 }
 
-var hashes = make(map[[16]byte]string)
+func newFileProcessor() *FileProcessor {
+	return &FileProcessor{hashes: make(map[[16]byte]string)}
+}
 
-func listDir(folder string) {
+func (fp *FileProcessor) ProcessDirectory(folder string) error {
+	return fp.listDir(folder)
+}
+
+func (fp *FileProcessor) listDir(folder string) error {
 	entries, err := os.ReadDir(folder)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error reading directory %s: %w", folder, err)
 	}
 
 	for _, e := range entries {
+		path := filepath.Join(folder, e.Name())
 		if e.IsDir() {
 			// Recursively read the files in subdirectories
-			listDir(filepath.Join(folder, e.Name()))
+			if err := fp.listDir(path); err != nil {
+				return err
+			}
 		} else {
-			var path = filepath.Join(folder, e.Name())
-
 			data, err := os.ReadFile(path)
 			if err != nil {
-				fmt.Println("Error reading file:", err)
-				return
+				return fmt.Errorf("error reading file %s: %w", path, err)
 			}
-			compareByHash(path, data)
+			fp.compareByHash(path, data)
 		}
 	}
-
-	fmt.Println(hashes)
+	return nil
 }
 
-func compareByHash(path string, data []byte) {
-	var hash = md5.Sum(data)
+func (fp *FileProcessor) compareByHash(path string, data []byte) {
+	hash := md5.Sum(data)
 
-	existing_path, exists := hashes[hash]
-	if !exists {
-		hashes[hash] = path
-		fmt.Printf("No file with this hash %s and path %s exists\n", hex.EncodeToString(hash[:]), path)
-	} else {
+	existing_path, exists := fp.hashes[hash]
+	if exists {
 		fmt.Printf("Duplicate for %s is in %s\n", path, existing_path)
+	} else {
+		fp.hashes[hash] = path
+	}
+}
+
+func main() {
+	fileProcessor := newFileProcessor()
+	if err := fileProcessor.ProcessDirectory("./test"); err != nil {
+		fmt.Println("Error:", err)
 	}
 }
