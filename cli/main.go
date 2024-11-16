@@ -121,15 +121,15 @@ func (fp *FileProcessor) deepCompare(filePath string, compareToFilePath string) 
 			return false, fmt.Errorf("error reading file %s: %w", compareToFilePath, err)
 		}
 
-		if fileBytesCount != fileToCompareBytesCount {
-			break
-		} else if fileBytesCount == 0 && fileToCompareBytesCount == 0 {
-			isDup = true
+		// If byte count is different or bytes are different, the file is not a duplicate
+		if fileBytesCount != fileToCompareBytesCount ||
+			!bytes.Equal(bufFile, bufFileToCompare) {
 			break
 		}
 
-		if !bytes.Equal(bufFile, bufFileToCompare) {
-			return false, nil
+		if fileBytesCount == 0 && fileToCompareBytesCount == 0 {
+			isDup = true
+			break
 		}
 	}
 
