@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
+
+	"ccdupe/internal"
 )
 
 type FileProcessor struct {
@@ -52,11 +53,11 @@ func (fp *FileProcessor) compareByHash(path string) {
 		// If hash dup exists compare every byte
 		isByteDup, err := fp.deepCompare(path, existingPath)
 		if err != nil {
-			fmt.Errorf("error deep compare for file %s: %w", path, err)
+			fmt.Printf("error deep compare for file %s: %v", path, err)
 		}
 
 		if isByteDup {
-			fmt.Errorf("duplicate for %s is in %s\n", path, existingPath)
+			fmt.Printf("duplicate for %s is in %s\n", path, existingPath)
 		}
 	} else {
 		fp.hashes[hash] = path
@@ -150,10 +151,14 @@ func printMemUsage() {
 }
 
 func main() {
-	printMemUsage()
+	internal.PrintMemUsage()
+	argsParser := internal.NewArgsParser()
+	fmt.Println(argsParser.StartPath, argsParser.MinSize)
+
 	fileProcessor := newFileProcessor()
-	if err := fileProcessor.ProcessDirectory("../test"); err != nil {
+	// if err := fileProcessor.ProcessDirectory("../test"); err != nil {
+	if err := fileProcessor.ProcessDirectory(argsParser.StartPath); err != nil {
 		fmt.Println("error:", err)
 	}
-	printMemUsage()
+	internal.PrintMemUsage()
 }

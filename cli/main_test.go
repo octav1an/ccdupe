@@ -1,14 +1,17 @@
 package main
 
 import (
+	"path/filepath"
 	"testing"
 )
 
+var fixturePath = "../fixtures/"
+
 func TestDeepCompare(t *testing.T) {
 	fileProcessor := newFileProcessor()
-	file := "../test/file2"
-	fileToCompareDup := "../test/duplicateoffile2"
-	fileToCompareNotDupSameLength := "../test/file4"
+	file := filepath.Join(fixturePath, "file2")
+	fileToCompareDup := filepath.Join(fixturePath, "duplicateoffile2")
+	fileToCompareNotDupSameLength := filepath.Join(fixturePath, "file4")
 
 	isSame, err := fileProcessor.deepCompare(file, fileToCompareDup)
 	if !isSame || err != nil {
