@@ -8,7 +8,7 @@ import (
 var fixturePath = "../../fixtures/"
 
 func TestDeepCompare(t *testing.T) {
-	fileProcessor := NewFileProcessor()
+	fileProcessor := NewFileProcessor(0)
 	file := filepath.Join(fixturePath, "file2")
 	fileToCompareDup := filepath.Join(fixturePath, "duplicateoffile2")
 	fileToCompareNotDupSameLength := filepath.Join(fixturePath, "file4")

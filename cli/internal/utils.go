@@ -9,6 +9,10 @@ func BToMb(b uint64) uint64 {
 	return b / 1024 / 1024
 }
 
+func BToKb(b uint64) uint64 {
+	return b / 1024
+}
+
 func PrintMemUsage() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)

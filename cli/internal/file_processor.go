@@ -9,11 +9,12 @@ import (
 )
 
 type FileProcessor struct {
-	hashes map[[16]byte]string
+	hashes  map[[16]byte]string
+	minSize uint64
 }
 
-func NewFileProcessor() *FileProcessor {
-	return &FileProcessor{hashes: make(map[[16]byte]string)}
+func NewFileProcessor(minSize uint64) *FileProcessor {
+	return &FileProcessor{hashes: make(map[[16]byte]string), minSize: minSize}
 }
 
 func (fp *FileProcessor) ProcessDirectory(folder string) error {
@@ -42,6 +43,10 @@ func (fp *FileProcessor) listDir(folder string) error {
 
 func (fp *FileProcessor) compareByHash(path string) {
 	h, _ := fp.calculateHash(path)
+	// If the file won't meet the minSize condition we don't hash it
+	if h == nil {
+		return
+	}
 	// Convert the hash to a 16 byte array
 	var hash [16]byte
 	copy(hash[:], h[:16])
@@ -62,12 +67,34 @@ func (fp *FileProcessor) compareByHash(path string) {
 	}
 }
 
+func (fp *FileProcessor) meetsMinFileSize(file *os.File) (bool, error) {
+	// Check if the file meets the min size defined by the user
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return false, fmt.Errorf("error getting file stat: %w", err)
+	}
+
+	// Zero means disable
+	if fp.minSize == 0 || BToKb(uint64(fileInfo.Size())) > fp.minSize {
+		return true, nil
+	}
+	return false, nil
+}
+
 func (fp *FileProcessor) calculateHash(filePath string) ([]byte, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening file %s: %w", filePath, err)
 	}
 	defer file.Close()
+
+	meetsMin, err := fp.meetsMinFileSize(file)
+	if err != nil {
+		return nil, err
+	}
+	if !meetsMin {
+		return nil, nil
+	}
 
 	hash := md5.New()
 	buf := make([]byte, 4096)

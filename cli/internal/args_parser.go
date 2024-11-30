@@ -6,7 +6,7 @@ import (
 
 type ArgsParser struct {
 	StartPath string
-	MinSize   int // In KB
+	MinSize   uint64 // In KB
 }
 
 func NewArgsParser() *ArgsParser {
@@ -16,7 +16,7 @@ func NewArgsParser() *ArgsParser {
 }
 
 func (ap *ArgsParser) ParseArgs() {
-	minSize := flag.Int("minsize", 0, "Minimum file size to process")
+	minSize := flag.Uint64("minsize", 0, "Minimum file size to process (Kb)")
 	flag.Parse()
 
 	ap.MinSize = *minSize

@@ -11,7 +11,7 @@ func main() {
 	argsParser := internal.NewArgsParser()
 	fmt.Println(argsParser.StartPath, argsParser.MinSize)
 
-	fileProcessor := internal.NewFileProcessor()
+	fileProcessor := internal.NewFileProcessor(argsParser.MinSize)
 	if err := fileProcessor.ProcessDirectory(argsParser.StartPath); err != nil {
 		fmt.Println("error:", err)
 	}
